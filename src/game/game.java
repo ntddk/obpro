@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class game extends JPanel {
+public class game extends JApplet {
   private static final Color BG_COLOR = new Color(0xbbada0);
   private static final String FONT_NAME = "Arial";
   private static final int tiles_SIZE = 64;
@@ -19,7 +19,7 @@ public class game extends JPanel {
   boolean lose = false;
   int score = 0;
 
-  public game() {
+  public void start() {
     setFocusable(true);
     addKeyListener(new KeyAdapter() {
       @Override
@@ -341,7 +341,7 @@ public class game extends JPanel {
     }
   }
 
-  public static void main(String[] args) {
+  public static void init(String[] args) {
     JFrame game = new JFrame();
     game.setTitle("2048");
     game.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
