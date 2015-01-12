@@ -6,7 +6,7 @@ public class Tile {
   private int value;
 
   public Tile() {
-    this(2);
+    this(0);
   }
 
   public Tile(int num) {
