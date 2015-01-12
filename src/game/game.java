@@ -1,12 +1,20 @@
 package game;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.swing.JApplet;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
 
 public class game extends JApplet {
   private static final Color BG_COLOR = new Color(0xbbada0);
@@ -14,7 +22,7 @@ public class game extends JApplet {
   private static final int tiles_SIZE = 64;
   private static final int ptiles_MARGIN = 16;
 
-  private tiles[] ptiles;
+  private Tile[] ptiles;
   boolean win = false;
   boolean lose = false;
   int score = 0;
@@ -62,9 +70,9 @@ public class game extends JApplet {
     score = 0;
     win = false;
     lose = false;
-    ptiles = new tiles[4 * 4];
+    ptiles = new Tile[4 * 4];
     for (int i = 0; i < ptiles.length; i++) {
-      ptiles[i] = new tiles();
+      ptiles[i] = new Tile();
     }
     addtiles();
     addtiles();
@@ -73,8 +81,8 @@ public class game extends JApplet {
   public void left() {
     boolean needAddtiles = false;
     for (int i = 0; i < 4; i++) {
-      tiles[] line = getLine(i);
-      tiles[] merged = mergeLine(moveLine(line));
+      Tile[] line = getLine(i);
+      Tile[] merged = mergeLine(moveLine(line));
       setLine(i, merged);
       if (!needAddtiles && !compare(line, merged)) {
         needAddtiles = true;
@@ -104,22 +112,22 @@ public class game extends JApplet {
     ptiles = rotate(270);
   }
 
-  private tiles tilesAt(int x, int y) {
+  private Tile tilesAt(int x, int y) {
     return ptiles[x + y * 4];
   }
 
   private void addtiles() {
-    List<tiles> list = availableSpace();
+    List<Tile> list = availableSpace();
     if (!availableSpace().isEmpty()) {
       int index = (int) (Math.random() * list.size()) % list.size();
-      tiles emptyTime = list.get(index);
-      emptyTime.value = Math.random() < 0.9 ? 2 : 4;
+      Tile emptyTime = list.get(index);
+      emptyTime.setValue(Math.random() < 0.9 ? 2 : 4);
     }
   }
 
-  private List<tiles> availableSpace() {
-    final List<tiles> list = new ArrayList<tiles>(16);
-    for (tiles t : ptiles) {
+  private List<Tile> availableSpace() {
+    final List<Tile> list = new ArrayList<Tile>(16);
+    for (Tile t : ptiles) {
       if (t.isEmpty()) {
         list.add(t);
       }
@@ -137,9 +145,9 @@ public class game extends JApplet {
     }
     for (int x = 0; x < 4; x++) {
       for (int y = 0; y < 4; y++) {
-        tiles t = tilesAt(x, y);
-        if ((x < 3 && t.value == tilesAt(x + 1, y).value)
-          || ((y < 3) && t.value == tilesAt(x, y + 1).value)) {
+        Tile t = tilesAt(x, y);
+        if ((x < 3 && t.getValue() == tilesAt(x + 1, y).getValue())
+          || ((y < 3) && t.getValue() == tilesAt(x, y + 1).getValue())) {
           return true;
         }
       }
@@ -147,7 +155,7 @@ public class game extends JApplet {
     return false;
   }
 
-  private boolean compare(tiles[] line1, tiles[] line2) {
+  private boolean compare(Tile[] line1, Tile[] line2) {
     if (line1 == line2) {
       return true;
     } else if (line1.length != line2.length) {
@@ -155,15 +163,15 @@ public class game extends JApplet {
     }
 
     for (int i = 0; i < line1.length; i++) {
-      if (line1[i].value != line2[i].value) {
+      if (line1[i].getValue() != line2[i].getValue()) {
         return false;
       }
     }
     return true;
   }
 
-  private tiles[] rotate(int angle) {
-    tiles[] newptiles = new tiles[4 * 4];
+  private Tile[] rotate(int angle) {
+    Tile[] newptiles = new Tile[4 * 4];
     int offsetX = 3, offsetY = 3;
     if (angle == 90) {
       offsetY = 0;
@@ -184,8 +192,8 @@ public class game extends JApplet {
     return newptiles;
   }
 
-  private tiles[] moveLine(tiles[] oldLine) {
-    LinkedList<tiles> l = new LinkedList<tiles>();
+  private Tile[] moveLine(Tile[] oldLine) {
+    LinkedList<Tile> l = new LinkedList<Tile>();
     for (int i = 0; i < 4; i++) {
       if (!oldLine[i].isEmpty())
         l.addLast(oldLine[i]);
@@ -193,7 +201,7 @@ public class game extends JApplet {
     if (l.size() == 0) {
       return oldLine;
     } else {
-      tiles[] newLine = new tiles[4];
+      Tile[] newLine = new Tile[4];
       ensureSize(l, 4);
       for (int i = 0; i < 4; i++) {
         newLine[i] = l.removeFirst();
@@ -202,11 +210,11 @@ public class game extends JApplet {
     }
   }
 
-  private tiles[] mergeLine(tiles[] oldLine) {
-    LinkedList<tiles> list = new LinkedList<tiles>();
+  private Tile[] mergeLine(Tile[] oldLine) {
+    LinkedList<Tile> list = new LinkedList<Tile>();
     for (int i = 0; i < 4 && !oldLine[i].isEmpty(); i++) {
-      int num = oldLine[i].value;
-      if (i < 3 && oldLine[i].value == oldLine[i + 1].value) {
+      int num = oldLine[i].getValue();
+      if (i < 3 && oldLine[i].getValue() == oldLine[i + 1].getValue()) {
         num *= 2;
         score += num;
         int ourTarget = 2048;
@@ -215,31 +223,31 @@ public class game extends JApplet {
         }
         i++;
       }
-      list.add(new tiles(num));
+      list.add(new Tile(num));
     }
     if (list.size() == 0) {
       return oldLine;
     } else {
       ensureSize(list, 4);
-      return list.toArray(new tiles[4]);
+      return list.toArray(new Tile[4]);
     }
   }
 
-  private static void ensureSize(java.util.List<tiles> l, int s) {
+  private static void ensureSize(List<Tile> l, int s) {
     while (l.size() != s) {
-      l.add(new tiles());
+      l.add(new Tile());
     }
   }
 
-  private tiles[] getLine(int index) {
-    tiles[] result = new tiles[4];
+  private Tile[] getLine(int index) {
+    Tile[] result = new Tile[4];
     for (int i = 0; i < 4; i++) {
       result[i] = tilesAt(i, index);
     }
     return result;
   }
 
-  private void setLine(int index, tiles[] re) {
+  private void setLine(int index, Tile[] re) {
     System.arraycopy(re, 0, ptiles, index * 4, 4);
   }
 
@@ -255,11 +263,11 @@ public class game extends JApplet {
     }
   }
 
-  private void drawtiles(Graphics g2, tiles tiles, int x, int y) {
+  private void drawtiles(Graphics g2, Tile tiles, int x, int y) {
     Graphics2D g = ((Graphics2D) g2);
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
-    int value = tiles.value;
+    int value = tiles.getValue();
     int xOffset = offsetCoors(x);
     int yOffset = offsetCoors(y);
     g.setColor(tiles.getBackground());
@@ -302,43 +310,6 @@ public class game extends JApplet {
 
   private static int offsetCoors(int arg) {
     return arg * (ptiles_MARGIN + tiles_SIZE) + ptiles_MARGIN;
-  }
-
-  static class tiles {
-    int value;
-
-    public tiles() {
-      this(0);
-    }
-
-    public tiles(int num) {
-      value = num;
-    }
-
-    public boolean isEmpty() {
-      return value == 0;
-    }
-
-    public Color getForeground() {
-      return value < 16 ? new Color(0x776e65) :  new Color(0xf9f6f2);
-    }
-
-    public Color getBackground() {
-      switch (value) {
-        case 2:    return new Color(0xeee4da);
-        case 4:    return new Color(0xede0c8);
-        case 8:    return new Color(0xf2b179);
-        case 16:   return new Color(0xf59563);
-        case 32:   return new Color(0xf67c5f);
-        case 64:   return new Color(0xf65e3b);
-        case 128:  return new Color(0xedcf72);
-        case 256:  return new Color(0xedcc61);
-        case 512:  return new Color(0xedc850);
-        case 1024: return new Color(0xedc53f);
-        case 2048: return new Color(0xedc22e);
-      }
-      return new Color(0xcdc1b4);
-    }
   }
 
   public static void init(String[] args) {
